@@ -277,11 +277,21 @@ main(int argc, char* argv[])
 				fprintf(stdout, "ERROR: create large op read thread\n");
 				exit(-1);
 			}
+			char lr_name[32];
+			sprintf(lr_name, "large_op_read_%d", n);
+			if (pthread_setname_np(dev->large_block_read_thread, lr_name) != 0) {
+				fprintf(stdout, "WARNING: can't set name to large op read thread");
+			}
 
 			if (pthread_create(&dev->large_block_write_thread, NULL,
 					run_large_block_writes, (void*)dev) != 0) {
 				fprintf(stdout, "ERROR: create large op write thread\n");
 				exit(-1);
+			}
+			char lw_name[32];
+			sprintf(lw_name, "large_op_write_%d", n);
+			if (pthread_setname_np(dev->large_block_write_thread, lw_name) != 0) {
+				fprintf(stdout, "WARNING: can't set name to large op write thread");
 			}
 		}
 	}
@@ -295,6 +305,11 @@ main(int argc, char* argv[])
 				fprintf(stdout, "ERROR: create tomb raider thread\n");
 				exit(-1);
 			}
+			char tr_name[32];
+			sprintf(tr_name, "tomb_raider_%d", n);
+			if (pthread_setname_np(dev->tomb_raider_thread, tr_name) != 0) {
+				fprintf(stdout, "WARNING: can't set name to tomb raider thread");
+			}
 		}
 	}
 
@@ -307,10 +322,16 @@ main(int argc, char* argv[])
 		}
 
 		for (uint32_t j = 0; j < g_scfg.threads_per_queue; j++) {
-			if (pthread_create(&trans_tids[(i * g_scfg.threads_per_queue) + j],
+			uint32_t tid = (i * g_scfg.threads_per_queue) + j;
+			if (pthread_create(&trans_tids[tid],
 					NULL, run_transactions, (void*)g_trans_qs[i]) != 0) {
 				fprintf(stdout, "ERROR: create transaction thread\n");
 				exit(-1);
+			}
+			char name[32];
+			sprintf(name, "translation_%d", tid);
+			if (pthread_setname_np(trans_tids[tid], name) != 0) {
+				fprintf(stdout, "WARNING: can't set name to translation thread");
 			}
 		}
 	}
@@ -327,6 +348,11 @@ main(int argc, char* argv[])
 				fprintf(stdout, "ERROR: create read request thread\n");
 				exit(-1);
 			}
+			char r_name[32];
+			sprintf(r_name, "read_request_%d", k);
+			if (pthread_setname_np(read_req_tids[k], r_name) != 0) {
+				fprintf(stdout, "WARNING: can't set name to read request thread");
+			}
 		}
 	}
 
@@ -341,6 +367,11 @@ main(int argc, char* argv[])
 					run_generate_write_reqs, NULL) != 0) {
 				fprintf(stdout, "ERROR: create write request thread\n");
 				exit(-1);
+			}
+			char w_name[32];
+			sprintf(w_name, "write_request_%d", k);
+			if (pthread_setname_np(write_req_tids[k], w_name) != 0) {
+				fprintf(stdout, "WARNING: can't set name to write request thread");
 			}
 		}
 	}
